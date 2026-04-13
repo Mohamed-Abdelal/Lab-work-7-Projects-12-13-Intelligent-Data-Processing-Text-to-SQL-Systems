@@ -29,7 +29,7 @@ This repository contains the deliverables for Lab 7 Projects 12 & 13. Below is t
 ## 3. Demonstration of Both Applications
 
 *   **Demo 1 (Invoice Processing):** 
-    Using the robust `sample_generator.py` script, we synthesize a dummy PDF invoice containing different line items, totals, and vendors. We upload this PDF to our Streamlit UI and click "Process". The demonstration will actively show how unstructured text chunks are intelligently formatted into clear line-item tables and strict JSON trees, validating that the mathematical totals (Subtotal + Tax) align with the documents.
+    Using a dummy PDF invoice containing different line items, totals, and vendors. We upload this PDF to our Streamlit UI and click "Process". The demonstration will actively show how unstructured text chunks are intelligently formatted into clear line-item tables and strict JSON trees, validating that the mathematical totals (Subtotal + Tax) align with the documents.
     
 *   **Demo 2 (Text-to-SQL):** 
     After initiating `retail.db` using `setup_db.py`, we approach the query chat box with a business-centric request: *"What is the total revenue from all orders?*. Our UI visualizes the back-end workings—displaying the exact SQL query generated (`SELECT SUM(TotalAmount)...`) alongside the raw SQL output. Next to it, it dynamically presents the final LLM conversational wrap: *"The total revenue across all orders is $X."*
