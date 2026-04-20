@@ -5,7 +5,7 @@ import pdfplumber
 from langchain_utils import process_invoice_text
 
 # --- Custom App Styling ---
-st.set_page_config(page_title="Intelligent Invoice Processor", page_icon="🧾", layout="wide")
+st.set_page_config(page_title="Intelligent Invoice Processor", layout="wide")
 
 st.markdown("""
 <style>
@@ -24,18 +24,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🧾 Intelligent Invoice Processing System")
+st.title("Intelligent Invoice Processing System")
 st.write("Upload an invoice document (PDF or Text), and our LangChain-powered system will extract structured financial data.")
 
 # Sidebar for API Key and Settings
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.header("Configuration")
     api_key_input = st.text_input("Groq API Key", type="password", help="Enter your Groq API key here.")
-    model_choice = st.selectbox("Model", ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"])
     st.markdown("---")
-    st.info("💡 **Tip:** Generate a sample invoice using `python sample_generator.py` in the project directory.")
+    st.info("**Tip:** You can upload the included `sample_invoice.pdf` or `sample_invoice.txt` to test the system.")
 
-uploaded_file = st.file_uploader("Choose an Invoice File", type=["pdf", "txt"])
+uploaded_file = st.file_uploader("Choose an Invoice File", type=["pdf", "txt", "png", "jpg", "jpeg"])
 
 def extract_text_from_pdf(file_path):
     text = ""
@@ -59,28 +58,34 @@ if uploaded_file is not None:
                         tmp_path = tmp_file.name
 
                     raw_text = ""
-                    # Extract text based on file type
                     if uploaded_file.name.lower().endswith(".pdf"):
                         raw_text = extract_text_from_pdf(tmp_path)
                     elif uploaded_file.name.lower().endswith(".txt"):
                         with open(tmp_path, "r", encoding="utf-8") as f:
                             raw_text = f.read()
+                    elif uploaded_file.name.lower().endswith((".png", ".jpg", ".jpeg")):
+                        try:
+                            import pytesseract
+                            from PIL import Image
+                            raw_text = pytesseract.image_to_string(Image.open(tmp_path))
+                        except Exception as e:
+                            st.error(f"Image text extraction failed. Please ensure Tesseract OCR is installed. Error: {e}")
 
                     # Process with LangChain
                     if not raw_text.strip():
                         st.error("Could not extract any text from the document. Please ensure it is a text-based PDF or TXT.")
                     else:
-                        structured_data = process_invoice_text(raw_text, api_key_input, model_choice)
+                        structured_data = process_invoice_text(raw_text, api_key_input)
                         
                         # Display Results
                         st.success("Invoice Processed Successfully!")
                         
                         # Validation Check
-                        st.subheader("📊 Extraction Summary")
+                        st.subheader("Extraction Summary")
                         if structured_data.is_valid:
-                            st.success("✅ **Validation:** The document appears to be a valid invoice, and data looks consistent.")
+                            st.success("**Validation:** The document appears to be a valid invoice, and data looks consistent.")
                         else:
-                            st.warning("⚠️ **Validation:** The document may be missing key fields or mathematically inconsistent.")
+                            st.warning("**Validation:** The document may be missing key fields or mathematically inconsistent.")
 
                         # Create columns for top level metrics
                         col1, col2, col3, col4 = st.columns(4)
@@ -92,7 +97,7 @@ if uploaded_file is not None:
                         st.markdown("---")
                         
                         # Line Items
-                        st.subheader("🛒 Line Items")
+                        st.subheader("Line Items")
                         if structured_data.line_items:
                             import pandas as pd
                             # Convert pydantic line items to dict array

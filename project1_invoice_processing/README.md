@@ -1,10 +1,11 @@
 # Project 1: Intelligent Invoice Processing System
 
-This project is an advanced LangChain application that processes invoices (PDF or Text) and extracts structured financial information (like invoice numbers, vendors, totals, and line items) using a Large Language Model (LLM) via Groq.
+This project is an advanced LangChain application that processes invoices (PDF, Image, or Text) and extracts structured financial information (like invoice numbers, vendors, totals, and line items) using a Large Language Model (LLM) via Groq.
 
 ## Features
-- Upload PDF or TXT invoices through a clean Streamlit interface.
+- Upload PDF, Image (PNG/JPG), or TXT invoices through a clean Streamlit interface.
 - Extracts information reliably using LangChain's `with_structured_output` and Pydantic models.
+- Robust dictionary fallback logic properly intercepts unstructured LLM generation arrays safely preventing 400 schema mismatch errors.
 - Performs basic consistency checks (validates the outputs).
 - Presents table layouts for line items and an expandable JSON view for raw data.
 
@@ -12,6 +13,7 @@ This project is an advanced LangChain application that processes invoices (PDF o
 
 1. **Prerequisites**
    - Python 3.8+ installed.
+   - Tesseract-OCR installed on your system (Required for Image parsing).
    - A free Groq API key (get one from [Groq Console](https://console.groq.com/)).
 
 2. **Install Dependencies**
@@ -20,12 +22,8 @@ This project is an advanced LangChain application that processes invoices (PDF o
    pip install -r requirements.txt
    ```
 
-3. **Generate Sample Data (Optional)**
-   If you don't have invoices on hand, generate dummy invoices to test:
-   ```bash
-   python sample_generator.py
-   ```
-   This will create a `sample_invoice.pdf` and `sample_invoice.txt` in the folder.
+3. **Use Sample Data**
+   We have included `sample_invoice.pdf` and `sample_invoice.txt` in the folder for you to quickly test the application.
 
 ## How to Run
 
