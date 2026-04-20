@@ -4,8 +4,9 @@ This application demonstrates a LangChain-powered Text-to-SQL architecture. It a
 
 ## Features
 - Interactive Streamlit Chat-style interface.
-- Automatically initializes a dummy SQLite Database (`retail.db`) with Customers, Products, Orders, and OrderItems.
+- Dynamically creates sample databases from uploaded flat files (.csv) or queries uploaded SQLite databases (.db/.sqlite).
 - Read-only Query Validation to prevent destructive actions (DROP, DELETE).
+- Robust SQL purification pipeline trims out chatty LLM prompts or trailing instructions to prevent SQLite syntax crashes.
 - Visualizes the raw schema/tables for verification.
 - Two-step LLM pipeline: (1) NLP to SQL and (2) SQL Results to Natural Language response.
 
@@ -21,11 +22,8 @@ This application demonstrates a LangChain-powered Text-to-SQL architecture. It a
    pip install -r requirements.txt
    ```
 
-3. **Initialize the Database**
-   You can either click the initialization button inside the Web UI, or run:
-   ```bash
-   python setup_db.py
-   ```
+3. **Upload your Database Document**
+   You do not need hardcoded databases; just upload a `retail.csv` or standard `.db` to dynamically generate your tables over the Streamlit UI!
 
 ## How to Run
 
@@ -35,9 +33,10 @@ streamlit run app.py
 ```
 
 1. Enter your Groq API key in the sidebar.
-2. Review the raw data tables by clicking "View Database Tables".
-3. Try asking a sample question, such as: *"Which product has the highest stock quantity?"*
-4. View the generated SQL query, raw database result, and the conversational response side-by-side.
+2. Upload your data document (`retail.csv` or `.db`) via the sidebar.
+3. Review the generated raw data tables by clicking "View Database Tables".
+4. Try asking a sample question based on your uploaded data!
+5. View the generated SQL query, raw database result, and the conversational response side-by-side.
 
 ## Example Use Cases
 - Non-technical managers asking: *"Show me the total sales from October 2023."*

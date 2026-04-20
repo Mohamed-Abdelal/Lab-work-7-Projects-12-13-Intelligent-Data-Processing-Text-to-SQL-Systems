@@ -21,7 +21,7 @@ def process_nl_to_sql(question: str, api_key: str, model_name: str = "llama-3.3-
     os.environ["GROQ_API_KEY"] = api_key
     
     if not os.path.exists(db_path):
-        return None, None, None, f"Database file {db_path} not found. Please run setup_db.py first."
+        return None, None, None, f"Database file {db_path} not found. Please upload a valid database file."
 
     llm = ChatGroq(model=model_name, temperature=0.0)
     db = get_database(f"sqlite:///{db_path}")
@@ -35,6 +35,24 @@ def process_nl_to_sql(question: str, api_key: str, model_name: str = "llama-3.3-
         sql_query = generate_query.invoke({"question": question})
         # Sometimes LLMs wrap SQL in markdown, clean it
         sql_query = sql_query.replace("```sql", "").replace("```", "").strip()
+        
+        # Clean prefix "SQLQuery:" if model repeats it
+        if "SQLQuery:" in sql_query:
+            sql_query = sql_query.split("SQLQuery:")[-1].strip()
+            
+        # Clean trailing explanation if model over-generates
+        if "SQLResult:" in sql_query:
+            sql_query = sql_query.split("SQLResult:")[0].strip()
+            
+        # Clean anything before SELECT or WITH to be absolutely safe
+        upper_q = sql_query.upper()
+        if "SELECT " in upper_q:
+            start_idx = upper_q.find("SELECT ")
+            with_idx = upper_q.find("WITH ")
+            if with_idx != -1 and with_idx < start_idx:
+                start_idx = with_idx
+            if start_idx > 0:
+                sql_query = sql_query[start_idx:]
 
         # Basic query validation (Prevent destructive operations)
         dangerous_keywords = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "GRANT"]

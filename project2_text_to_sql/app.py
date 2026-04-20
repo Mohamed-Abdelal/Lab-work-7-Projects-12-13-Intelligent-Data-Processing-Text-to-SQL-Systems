@@ -5,7 +5,7 @@ import sqlite3
 from langchain_sql_utils import process_nl_to_sql
 
 # --- Custom App Styling ---
-st.set_page_config(page_title="Text-to-SQL System", page_icon="🗄️", layout="wide")
+st.set_page_config(page_title="Text-to-SQL System", layout="wide")
 
 st.markdown("""
 <style>
@@ -25,23 +25,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🗄️ Natural Language to Database Query System")
+st.title("Natural Language to Database Query System")
 st.write("Ask questions in plain English, and watch LangChain translate them into SQL queries against the local Retail database.")
 
-DB_PATH = "retail.db"
+import tempfile
 
 # Sidebar for Setup and API
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.header("Configuration")
     api_key_input = st.text_input("Groq API Key", type="password", help="Enter your Groq API key here.")
-    model_choice = st.selectbox("Model", ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"])
     
     st.markdown("---")
-    st.header("🗃️ Database Controls")
-    if st.button("Initialize / Reset Sample DB"):
-        from setup_db import setup_database
-        setup_database()
-        st.success("Database initialized!")
+    st.header("Database Controls")
+    uploaded_file = st.file_uploader("Upload Data Document (.csv, .db, .sqlite)", type=["csv", "db", "sqlite"])
 
     st.markdown("---")
     st.markdown("### Sample Questions")
@@ -51,14 +47,34 @@ with st.sidebar:
             "- List the first names of all customers who joined in 2023.\n"
             "- What is the total price of all order items for order ID 1?")
 
-# Check DB existence
-if not os.path.exists(DB_PATH):
-    st.warning("⚠️ Database not found. Please click 'Initialize / Reset Sample DB' in the sidebar to create it.")
+if uploaded_file is None:
+    st.warning("Please upload a data document (.csv, .db, or .sqlite) from the sidebar to continue.")
 else:
+    # Save uploaded file to temp path
+    file_ext = uploaded_file.name.split('.')[-1].lower()
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp_file:
+        DB_PATH = tmp_file.name
+
+    if file_ext == "csv":
+        # Convert CSV to SQLite sample database dynamically
+        try:
+            df = pd.read_csv(uploaded_file)
+            table_name = uploaded_file.name.split('.')[0].replace(" ", "_").lower()
+            conn = sqlite3.connect(DB_PATH)
+            df.to_sql(table_name, conn, if_exists="replace", index=False)
+            conn.close()
+        except Exception as e:
+            st.error(f"Failed to process CSV file into database: {e}")
+            st.stop()
+    else:
+        # Save exact DB file to temp
+        with open(DB_PATH, "wb") as f:
+            f.write(uploaded_file.getvalue())
     # -----------------------------
     # Database Visualizer Expander
     # -----------------------------
-    with st.expander("🔍 View Database Tables (Raw Data)"):
+    with st.expander("View Database Tables (Raw Data)"):
         conn = sqlite3.connect(DB_PATH)
         tables = pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';", conn)
         for table_name in tables['name'].tolist():
@@ -83,25 +99,25 @@ else:
         else:
             with st.spinner("Thinking... translating to SQL..."):
                 sql_query, sql_result, final_answer, error_msg = process_nl_to_sql(
-                    user_question, api_key_input, model_choice
+                    user_question, api_key_input, db_path=DB_PATH
                 )
 
                 if error_msg:
-                    st.error(f"❌ Error: {error_msg}")
+                    st.error(f"Error: {error_msg}")
                 else:
                     # User Question
-                    st.markdown(f"<div class='chat-bubble user-bubble'><b>🧑‍💻 You:</b> {user_question}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='chat-bubble user-bubble'><b>You:</b> {user_question}</div>", unsafe_allow_html=True)
                     
                     # Layout for behind-the-scenes vs final answer
                     col1, col2 = st.columns([1, 1])
                     
                     with col1:
-                        st.subheader("⚙️ Generated SQL Query")
+                        st.subheader("Generated SQL Query")
                         st.code(sql_query, language="sql")
                         
-                        st.subheader("📊 Raw Database Result")
+                        st.subheader("Raw Database Result")
                         st.write(sql_result)
                         
                     with col2:
-                        st.subheader("🤖 Natural Language Response")
+                        st.subheader("Natural Language Response")
                         st.info(final_answer)
