@@ -1,4 +1,4 @@
-# Project Milestone 2: Intelligent Data Processing & Text-to-SQL Systems
+# Intelligent Data Processing & Text-to-SQL Systems
 
 This repository contains the deliverables for Lab 7 Projects 12 & 13. Below is the presentation breakdown detailing the system architecture, components, and challenges addressed during development.
 
